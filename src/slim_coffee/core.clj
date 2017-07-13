@@ -8,7 +8,61 @@
 
 ;; use mount instead of atom
 (defonce s-atom (atom nil))
-(defonce channels (atom #{}))
+
+;; app data
+(defonce game-ids (atom []))
+(defonce game-to-clients (atom {})) ;; map of game to set of websocket
+(defonce game-to-sections (atom {})) ;; map of game to {:maps {:section-id beans}}
+(defonce game-to-votes (atom {}))
+(defonce game-to-beans (atom {}))
+
+(defn make-unique-id
+  ([] (make-unique-id #{}))
+  ([ids]
+   (letfn [(new-id []
+             (keyword (str (java.util.UUID/randomUUID))))] 
+     (loop [id (new-id)]
+       (if (contains? ids id)
+         (recur (new-id))
+         id)))))
+
+(defn vote-handler! [{:keys [game-id bean-id]}]
+  (let [vote-data (get @game-to-votes game-id)
+        votes (or (get vote-data bean-id)
+                   0)]
+    (swap! game-to-votes assoc game-id
+           (assoc vote-data bean-id (inc votes)))))
+
+(defn vec-remove
+  [coll elem]
+  (vec-remove-index coll (.indexOf coll elem)))
+
+(defn vec-remove-index
+  "remove elem in coll"
+  [coll pos]
+  (vec (concat (subvec coll 0 pos) (subvec coll (inc pos)))))
+
+(defn move-handler! [{:keys [game-id bean-id old-sec-id new-sec-id]}]
+  (let [game-data (get @game-to-sections game-id)
+        section-data (:maps game-data)
+        updated-new (conj (get section-data new-sec-id) bean-id)
+        updated-old (vec-remove (get section-data old-sec-id) bean-id)
+        updated-section-data (-> section-data
+                                 (assoc old-sec-id updated-old)
+                                 (assoc new-sec-id updated-new))
+        updated-game-data (assoc game-data :maps updated-section-data)]
+    (swap! game-to-sections assoc game-id updated-game-data)))
+
+(defn new-bean-handler! [{:keys [game-id bean-id bean-data sec-id]}]
+  (let [game-section-data (get @game-to-sections game-id)
+        section-data (:maps game-section-data)
+        game-bean-data (get @game-to-beans game-id)
+        bean-map (:maps game-bean-data)
+        new-bean-map (assoc bean-map bean-id bean-data)
+        updated-game-section-data (assoc game-section-data :maps
+                                         (update section-data sec-id conj bean-id))]
+    (swap! game-to-sections assoc game-id updated-game-section-data)
+    (swap! game-to-beans assoc game-id (assoc game-bean-data :maps new-bean-map))))
 
 (defn remember-channel! [channel]
   (swap! channels conj channel))
