@@ -2,12 +2,11 @@
 (def version "0.1.0-SNAPSHOT")
 
 (set-env! :resource-paths #{"resources" "src"}
-          :dependencies   '[[org.clojure/clojure "RELEASE"]
+          :dependencies   '[[org.clojure/clojure "1.9.0-alpha14"]
                             [mount "0.1.11"]
                             [bidi "2.1.1"]
                             [http-kit "2.3.0-alpha2"]
-                            [com.cognitect/transit-clj "0.8.300"]                            
-                            [adzerk/boot-test "RELEASE" :scope "test"]])
+                            [com.cognitect/transit-clj "0.8.300"]])
 
 (task-options!
  aot {:namespace   #{'slim-coffee.core}}
