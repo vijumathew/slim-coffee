@@ -64,11 +64,11 @@
     (swap! game-to-sections assoc game-id updated-game-section-data)
     (swap! game-to-beans assoc game-id (assoc game-bean-data :maps new-bean-map))))
 
-(defn remember-channel! [channel]
-  (swap! channels conj channel))
+(defn remember-channel! [game-id channel]
+  (swap! game-to-clients update game-id #(set (conj %1 %2)) channel))
 
-(defn forget-channel! [channel status]
-  (swap! channels #(remove #{channel} %)))
+(defn forget-channel! [game-id channel status]
+  (swap! game-to-clients update game-id #(set (remove #{%2} %1)) channel))
 
 (defn notify-clients [msg]
   (doseq [channel @channels]
