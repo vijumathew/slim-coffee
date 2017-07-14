@@ -1,8 +1,9 @@
 (def project 'slim-coffee)
 (def version "0.1.0-SNAPSHOT")
 
-(set-env! :resource-paths #{"resources" "src"}
+(set-env! :resource-paths #{"src"}
           :dependencies   '[[org.clojure/clojure "1.9.0-alpha14"]
+                            [org.clojure/core.async "0.3.443"]
                             [mount "0.1.11"]
                             [bidi "2.1.1"]
                             [http-kit "2.3.0-alpha2"]
