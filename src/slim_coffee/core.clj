@@ -74,6 +74,9 @@
         bean-id (make-unique-id (set (keys (get-in @game-to-beans [:1 :maps]))))]
     (new-bean-handler! game-id bean-id bean-data sec-id game-to-sections game-to-beans)))
 
+(defmethod respond-to-action! :no-op [[_ _ _]]
+  (identity nil))
+
 (defn send-data [game-id]
   (notify-clients (transit-to-string (get-ws-payload game-id))
                   (get @game-to-clients game-id)))
@@ -87,8 +90,8 @@
           data (parse-transit-string unparsed)
           [game-id _] data]
       (respond-to-action! data)
-      (send-data game-id))
-    (recur)))
+      (send-data game-id)
+      (recur))))
 
 (defn websocket-handler [req]
   (httpkit/with-channel req channel
@@ -100,10 +103,10 @@
                                   (let [parsed (parse-transit-string data)]
                                     (when (not (get @client-to-game channel))
                                       (let [board-id (first parsed)]
-                                        (swap! game-ids conj board-id)
                                         (remember-channel! board-id channel)
-                                        (when (not (contains? @game-ids board-id)
-                                                   (init-game! board-id)))))
+                                        (when (not (contains? @game-ids board-id))
+                                          (init-game! board-id)
+                                          (swap! game-ids conj board-id))))
                                     (async/put! app-chan data))))))
 
 (def handler
