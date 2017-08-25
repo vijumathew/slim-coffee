@@ -2,7 +2,8 @@
   (:require [mount.core :as mount]
             [bidi.bidi :as bidi]
             [bidi.ring :as br]
-            [ring.middleware.file :as rf]
+            [ring.middleware.file :refer [wrap-file]]
+            [ring.middleware.resource :refer [wrap-resource]]
             [clojure.core.async :as async]
             [org.httpkit.server :as httpkit]
             [slim-coffee.handlers :refer
@@ -111,12 +112,14 @@
                                           (swap! game-ids conj board-id))))
                                     (async/put! app-chan data))))))
 
-(def handler
-  (atom 
-   (br/make-handler ["/" {"app.html" app
-                          "ws" websocket-handler
-                          "index.html" (rf/wrap-file {} "target/public")
-                          true (rf/wrap-file {} "target/public")}])))
+(def page-handler (atom nil))
+(def handler (atom nil))
+
+(defn reset-handler! []
+  (reset! handler
+          (br/make-handler ["/" {"app.html" app
+                                 "ws" websocket-handler
+                                 true @page-handler}])))
 
 (defn start-server [port]
   (httpkit/run-server @handler {:port port}))
@@ -129,10 +132,15 @@
   :start (reset! s-atom (start-server 8080))
   :stop (stop-server s-atom))
 
-(defn -main
-  [& args]
+(defn dev-main []
   (.mkdirs (io/file "target" "public"))
   (init-data!)
+  (reset! page-handler (wrap-file {} "target/public"))
+  (reset-handler!)
   (mount/start))
 
-;; add build main
+(defn -main [& args]
+  (init-data!)
+  (reset! page-handler (wrap-resource {} "public"))
+  (reset-handler!)
+  (mount/start))

@@ -32,8 +32,14 @@
 (deftask build
   "Build the project locally as a JAR."
   [d dir PATH #{str} "the set of directories to write to (target)."]
-  (let [dir (if (seq dir) dir #{"target"})]
-    (comp (aot) (pom) (uber) (jar) (target :dir dir))))
+  (comp
+   (cljs :optimizations :advanced)
+   (aot)
+   (pom)
+   (uber)
+   (jar)
+   (sift)
+   (target :dir dir)))
 
 (deftask dev
   "Run the project."
@@ -45,4 +51,4 @@
    (cljs)
    (target)
    (with-pass-thru _
-     (apply (resolve 'slim-coffee.core/-main) args))))
+     (apply (resolve 'slim-coffee.core/dev-main) args))))
