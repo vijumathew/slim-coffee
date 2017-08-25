@@ -2,12 +2,14 @@
   (:require [mount.core :as mount]
             [bidi.bidi :as bidi]
             [bidi.ring :as br]
+            [ring.middleware.file :as rf]
             [clojure.core.async :as async]
             [org.httpkit.server :as httpkit]
             [slim-coffee.handlers :refer
              [vote-handler! new-bean-handler! move-handler!]]
             [slim-coffee.util :refer
-             [transit-to-string parse-transit-string make-unique-id repeat-into-elem]])
+             [transit-to-string parse-transit-string make-unique-id repeat-into-elem]]
+            [clojure.java.io :as io])
   (:gen-class))
 
 (defn init-data! []
@@ -111,9 +113,10 @@
 
 (def handler
   (atom 
-   (br/make-handler ["/" {"index.html" app
+   (br/make-handler ["/" {"app.html" app
                           "ws" websocket-handler
-                          true other-app}])))
+                          "index.html" (rf/wrap-file {} "target/public")
+                          true (rf/wrap-file {} "target/public")}])))
 
 (defn start-server [port]
   (httpkit/run-server @handler {:port port}))
@@ -127,7 +130,9 @@
   :stop (stop-server s-atom))
 
 (defn -main
-  "I don't do a whole lot ... yet."
   [& args]
+  (.mkdirs (io/file "target" "public"))
   (init-data!)
   (mount/start))
+
+;; add build main

@@ -1,8 +1,12 @@
 (def project 'slim-coffee)
 (def version "0.1.0-SNAPSHOT")
 
-(set-env! :resource-paths #{"src"}
-          :dependencies   '[[org.clojure/clojure "1.9.0-alpha14"]
+(set-env! :source-paths #{"src/cljs" "src/cljc" "src/clj"}
+          :resource-paths #{"resources"}
+          :dependencies   '[[adzerk/boot-cljs "1.7.228-2"]
+                            [adzerk/boot-reload "0.4.12"]
+                            [org.clojure/clojure "1.9.0-alpha14"]
+                            [org.clojure/clojurescript  "1.9.495"]
                             [org.clojure/core.async "0.3.443"]
                             [mount "0.1.11"]
                             [bidi "2.1.1"]
@@ -21,15 +25,24 @@
  jar {:main        'slim-coffee.core
       :file        (str "slim-coffee-" version "-standalone.jar")})
 
+(require
+  '[adzerk.boot-cljs :refer [cljs]]
+  '[adzerk.boot-reload :refer [reload]])
+
 (deftask build
   "Build the project locally as a JAR."
   [d dir PATH #{str} "the set of directories to write to (target)."]
   (let [dir (if (seq dir) dir #{"target"})]
     (comp (aot) (pom) (uber) (jar) (target :dir dir))))
 
-(deftask run
+(deftask dev
   "Run the project."
   [a args ARG [str] "the arguments for the application."]
-  (require '[slim-coffee.core :as app])
-  (apply (resolve 'app/-main) args))
-
+  (require 'slim-coffee.core)
+  (comp
+   (watch)
+   (reload :asset-path "public")
+   (cljs)
+   (target)
+   (with-pass-thru _
+     (apply (resolve 'slim-coffee.core/-main) args))))
