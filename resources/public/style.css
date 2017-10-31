@@ -23,23 +23,38 @@ input {
 #app > div > div + .section-container {
     margin-top: 20px;
 }
+/* layout */
 
 .section-container {
     display: flex;
-    flex-direction: row;
-    justify-content: space-between;
+    flex-direction: column;
 }
 
 .section {
     border: 1px solid purple;
     border-radius: 2px;
-    width: 33%;
     height: min-content;
-    max-width: 280px;
 }
 
 .section + .section {
-    margin-left: 20px;
+    margin-top: 15px;
+}
+
+@media (min-width: 30em) {
+    .section-container {
+        flex-direction: row;
+        justify-content: space-between;
+    }
+
+    .section {
+        width: 33%;
+        max-width: 280px;
+    }
+
+    .section + .section {
+        margin-top: 0;
+        margin-left: 20px;
+    }
 }
 
 .section-label {
@@ -72,6 +87,12 @@ input:focus {
     outline: none;
 }
 
+.input-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
 .input-container button {
     border: 2px solid purple;
     font-size: 16px;
@@ -80,21 +101,28 @@ input:focus {
     padding: 5px 10px;
 }
 
-.welcome-container * + * {
+.welcome-container > * + * {
     margin-top: 15px;
-}
-
-.game-container input {
-    margin-bottom: 15px;
 }
 
 .input-container input {
     border: none;
     border-bottom: 1px solid purple;
-    min-width: 180px;
-    max-width: 280px;
-    width: 60%;
-    margin-right: 20px;
+    margin-bottom: 20px;
+    min-width: 150px;
+}
+
+@media (min-width: 30em) {
+    .input-container {
+        width: auto;
+        display: block;
+    }
+
+    .input-container input {
+        width: 60%;
+        max-width: 280px;
+        margin-right: 20px;
+    }
 }
 
 .bean:hover,
