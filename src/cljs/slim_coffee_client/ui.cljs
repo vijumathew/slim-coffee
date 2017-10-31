@@ -12,11 +12,11 @@
    (map #(vector :li (child (get (r/react lookup-map) %) %)) data)])
 
 ;; data is section-map
-(r/defc sec-container < r/reactive [data section-click child]
+(r/defc sec-container < r/reactive [data name-data section-click child]
   "maps over data and passes id into section-click "
   [:div {:class "section-container"}
    (map #(vector :div {:class "section" :on-click (fn [] (section-click (first %)))}
-                 [:label [:span (str (first %))]]
+                 [:label [:span (str (get @name-data (first %)))]]
                  (child (second %)))
         (r/react data))])
 

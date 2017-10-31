@@ -18,18 +18,22 @@
   ;; put specs on these
   (def game-ids (atom #{}))
   (def game-to-clients (atom {})) ;; map of game to set of websocket
-  (def game-to-sections (atom {})) ;; map of game to {:maps {:section-id beans}}
+  ;; map of game to {:maps {:section-id beans} :vec [order] :names {:sec-id name}}
+  (def game-to-sections (atom {}))
   (def game-to-votes (atom {}))
   (def game-to-beans (atom {})) ;; map of game to {:maps {:bean-id data}}
   (def client-to-game (atom {})))
 
 (defn init-game! [game-id]
   (let [section-ids (repeat-into-elem make-unique-id #{} 3)
-        id-map (into {} (map #(vector % [])) section-ids)]
+        id-map (into {} (map #(vector % [])) section-ids)
+        ordered-ids (vec section-ids)
+        names '("to discuss" "discussing" "discussed")]
     (swap! game-ids conj game-id)
     (swap! game-to-beans assoc game-id {})
     (swap! game-to-sections assoc game-id {:maps id-map})
-    (swap! game-to-sections assoc-in [game-id :vec] (vec section-ids))
+    (swap! game-to-sections assoc-in [game-id :vec] ordered-ids)
+    (swap! game-to-sections assoc-in [game-id :names] (zipmap ordered-ids names))
     (swap! game-to-votes assoc game-id {})))
 
 (defn remember-channel! [game-id channel]

@@ -16,6 +16,7 @@
 
 (defonce bean-map (j/cell {}))
 (defonce section-map (j/cell {}))
+(defonce name-map (j/cell {}))
 (defonce current-route (j/cell {}))
 (defonce board-id (j/cell nil))
 
@@ -35,9 +36,11 @@
 
 (defn respond-to-ws! [{:keys [:bean :section]}]
   (let [bean-data (:maps bean)
-        section-data (:maps section)]
+        section-data (:maps section)
+        name-data (:names section)]
     (print 'data)
     (reset! bean-map bean-data)
+    (reset! name-map name-data)
     (reset! section-map section-data)))
 
 (def move-ui-chan (async/chan))
@@ -93,7 +96,7 @@
 (r/defc game []
   [:div
    (ui/message-input upload-bean)
-   (ui/sec-container section-map section-click my-section)])
+   (ui/sec-container section-map name-map section-click my-section)])
 
 (r/defc app < r/reactive []
   (let [handler (:handler (r/react current-route))]
