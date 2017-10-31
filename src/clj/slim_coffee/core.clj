@@ -49,10 +49,10 @@
    :headers {"Content-Type" "text/html"}
    :body    "hello world yo!"})
 
-(defn other-app [req]
-  {:status  200
+(defn not-found [req]
+  {:status  404
    :headers {"Content-Type" "text/html"}
-   :body    "hello world friend!"})
+   :body    "page not found!"})
 
 (defn get-ws-payload [game-id]
   (let [bean-data (get @game-to-beans game-id)
@@ -119,7 +119,11 @@
   (reset! handler
           (br/make-handler ["/" {"app.html" app
                                  "ws" websocket-handler
-                                 true @page-handler}])))
+                                 "index.html" @page-handler
+                                 "main.js" @page-handler
+                                 "style.css" @page-handler
+                                 "main.out" {true @page-handler}
+                                 true not-found}])))
 
 (defn start-server [port]
   (httpkit/run-server @handler {:port port}))
@@ -135,6 +139,7 @@
 (defn dev-main []
   (.mkdirs (io/file "target" "public"))
   (init-data!)
+  ;; do something with main.out here as well
   (reset! page-handler (wrap-file {} "target/public"))
   (reset-handler!)
   (mount/start))

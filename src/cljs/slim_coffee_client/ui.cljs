@@ -2,8 +2,6 @@
   (:require [rum.core :as r]
             [javelin.core :as j]))
 
-
-
 (r/defc bean [on-click data id]
   [:div {:on-click #(on-click id)} data])
 
