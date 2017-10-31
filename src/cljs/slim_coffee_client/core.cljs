@@ -94,7 +94,7 @@
 (def my-section (partial ui/section bean-map my-bean))
 
 (r/defc game []
-  [:div
+  [:div.game-container
    (ui/message-input upload-bean)
    (ui/sec-container section-map name-map section-click my-section)])
 
