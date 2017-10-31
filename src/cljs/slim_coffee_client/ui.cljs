@@ -30,7 +30,8 @@
        :placeholder "new bean"
        :on-change #(reset! value (.. % -target -value)) }]
      [:button
-      {:on-click #(on-click value)} "SUBMIT"]]))
+      {:on-click #(when (-> @value empty? not)
+                    (on-click value))} "SUBMIT"]]))
 
 (r/defcs welcome < (r/local nil ::value) [state on-click]
   (let [value (::value state)]
@@ -39,4 +40,5 @@
      [:div.input-container
       [:input {:placeholder "enter game id"
                :on-change #(reset! value (.. % -target -value)) }]
-      [:button {:on-click #(on-click value)} "SUBMIT"]]]))
+      [:button {:on-click #(when (-> @value js/isNaN not)
+                             (on-click value))} "SUBMIT"]]]))
