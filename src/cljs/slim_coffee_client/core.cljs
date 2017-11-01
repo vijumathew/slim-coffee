@@ -19,6 +19,8 @@
 (defonce name-map (j/cell {}))
 (defonce current-route (j/cell {}))
 (defonce board-id (j/cell nil))
+(defonce bean-or-section (j/cell :bean))
+(defonce active-bean-id (j/cell nil))
 
 (defn upload-bean [value]
   (ws/send-transit-msg!
@@ -56,14 +58,19 @@
 (defn get-next-message [msg-name-set input-chan]
   (async-some msg-name-set input-chan))
 
+;; move bean loop
 (async/go-loop []
   (let [bean-obj (<! (get-next-message #{:bean-click} move-ui-chan))
         old-sec-obj (<! (get-next-message #{:section-click} move-ui-chan))]
+    (reset! bean-or-section :section)
+    (reset! active-bean-id (second bean-obj))
     (let [new-sec-obj (<! (get-next-message #{:section-click} move-ui-chan))
           bean-id (second bean-obj)
           old-sec (second old-sec-obj)
           new-sec (second new-sec-obj)]
       (upload-move bean-id old-sec new-sec)
+      (reset! bean-or-section :bean)
+      (reset! active-bean-id nil)
       (recur))))
 
 (defn section-click [id]
@@ -90,13 +97,13 @@
   (pushy/set-token! history (str "/board/" @board-id))
   (refresh-board))
 
-(def my-bean (partial ui/bean bean-click))
+(def my-bean (partial ui/bean bean-or-section bean-click))
 (def my-section (partial ui/section bean-map my-bean))
 
 (r/defc game []
   [:div.game-container
    (ui/message-input upload-bean)
-   (ui/sec-container section-map name-map section-click my-section)])
+   (ui/sec-container bean-or-section section-map name-map section-click my-section)])
 
 (r/defc app < r/reactive []
   (let [handler (:handler (r/react current-route))]

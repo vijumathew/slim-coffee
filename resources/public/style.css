@@ -70,7 +70,7 @@ input {
 }
 
 .bean {
-    padding: 10px 5px;
+    padding: 10px;
 }
 
 .section ul li + li {
@@ -125,8 +125,22 @@ input:focus {
     }
 }
 
-.bean:hover,
 button:hover {
+    background-color: rgb(230,230,250);
+    cursor: pointer;
+}
+
+.section-hover {
+    background-color: rgb(230,230,250);
+    cursor: pointer;
+}
+
+.section-hover .section-label {
+    cursor: pointer;
+    color: rgb(230,230,250);
+}
+
+.bean-hover {
     background-color: rgb(230,230,250);
     cursor: pointer;
 }
