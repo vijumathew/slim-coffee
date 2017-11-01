@@ -113,5 +113,6 @@
 
 (pushy/start! history)
 
-(ws/make-websocket! (str "ws://" "127.0.0.1:8080" "/ws") respond-to-ws!)
+(let [current-url (.-host js/window.location)]
+  (ws/make-websocket! (str "ws://" current-url "/ws") respond-to-ws!))
 (r/mount (app) (.getElementById js/document "app"))
