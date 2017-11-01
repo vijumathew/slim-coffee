@@ -1,3 +1,13 @@
+html {
+    font-size: 18px;
+}
+
+@media screen and (min-width: 500px) {
+    html {
+        font-size: 16px;
+    }
+}
+
 body {
     font-family: sans-serif;
     margin: 20px;
@@ -12,7 +22,7 @@ body {
 
 #app,
 input {
-    font-size: 16px;
+    font-size: 1rem;
 }
 
 #app > div > div {
@@ -31,8 +41,6 @@ input {
 }
 
 .section {
-    border: 1px solid purple;
-    border-radius: 2px;
     height: min-content;
 }
 
@@ -40,7 +48,7 @@ input {
     margin-top: 15px;
 }
 
-@media (min-width: 30em) {
+@media screen and (min-width: 500px) {
     .section-container {
         flex-direction: row;
         justify-content: space-between;
@@ -61,12 +69,18 @@ input {
     background-color: purple;
     color: white;
     padding: 5px 10px;
+    border: 1px solid purple;
+    border-top-left-radius: 2px;
+    border-top-right-radius: 2px;
 }
 
 .section ul {
     list-style: none;
     padding: 0;
     margin: 0;
+    border: 1px solid purple;
+    border-bottom-left-radius: 2px;
+    border-bottom-right-radius: 2px;
 }
 
 .bean {
@@ -95,7 +109,7 @@ input:focus {
 
 .input-container button {
     border: 2px solid purple;
-    font-size: 16px;
+    font-size: 1rem;
     color: purple;
     background-color: transparent;
     padding: 5px 10px;
@@ -107,12 +121,13 @@ input:focus {
 
 .input-container input {
     border: none;
+    border-radius: 0;
     border-bottom: 1px solid purple;
     margin-bottom: 20px;
     min-width: 150px;
 }
 
-@media (min-width: 30em) {
+@media screen and (min-width: 500px) {
     .input-container {
         width: auto;
         display: block;
@@ -131,13 +146,16 @@ button:hover {
 }
 
 .section-hover {
-    background-color: rgb(230,230,250);
     cursor: pointer;
 }
 
 .section-hover .section-label {
     cursor: pointer;
     color: rgb(230,230,250);
+}
+
+.section-hover ul {
+    background-color: rgb(230,230,250);
 }
 
 .bean-hover {
