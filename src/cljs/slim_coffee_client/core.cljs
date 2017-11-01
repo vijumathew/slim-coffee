@@ -97,7 +97,7 @@
   (pushy/set-token! history (str "/board/" @board-id))
   (refresh-board))
 
-(def my-bean (partial ui/bean bean-or-section bean-click))
+(def my-bean (partial ui/bean active-bean-id bean-or-section bean-click))
 (def my-section (partial ui/section bean-map my-bean))
 
 (r/defc game []

@@ -144,3 +144,7 @@ button:hover {
     background-color: rgb(230,230,250);
     cursor: pointer;
 }
+
+.bean-active {
+    background-color: rgb(185, 145, 206);
+}

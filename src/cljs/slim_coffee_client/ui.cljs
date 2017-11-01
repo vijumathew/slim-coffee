@@ -8,12 +8,13 @@
 (defn make-false [my-atom]
   (reset! my-atom false))
 
-(r/defcs bean < (r/local false ::hover) (r/local false ::active) r/reactive
-  [state bean-or-section on-click data id]
-  (let [active (::active state)
+(r/defcs bean < (r/local false ::hover) r/reactive
+  [state active-bean-id bean-or-section on-click data id]
+  (let [active (= (r/react active-bean-id) id)
         is-bean (= (r/react bean-or-section) :bean)
         hover (::hover state)]
-    [:li.bean {:class [(when (and @hover is-bean) "bean-hover")]
+    [:li.bean {:class [(when (and @hover is-bean) "bean-hover")
+                       (when active "bean-active")]
                :on-click #(on-click id)
                :on-mouse-enter #(make-true hover)
                :on-touch-start #(make-true hover)
