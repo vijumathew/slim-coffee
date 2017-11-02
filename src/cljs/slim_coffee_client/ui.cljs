@@ -66,7 +66,7 @@
 (r/defcs welcome < (r/local nil ::value) [state on-click]
   (let [value (::value state)]
     [:div.welcome-container
-     [:div "welcome to lean coffee"]
+     [:div "welcome to slim coffee"]
      [:div.input-container
       [:input {:placeholder "enter game id"
                :on-change #(reset! value (.. % -target -value)) }]
