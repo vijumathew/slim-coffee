@@ -8,8 +8,9 @@
             [clojure.core.async :as async]
             [slim-coffee-client.data :refer
              [make-vote-obj make-new-bean-obj make-move-obj]]
-            [slim-coffee-client.ui :as ui]
-            [slim-coffee-client.websockets :as ws]))
+            [slim-coffee.ui :as ui]
+            [slim-coffee-client.websockets :as ws]
+            [cognitect.transit]))
 
 ;; enable cljs to print to the JS console of the browser
 (enable-console-print!)
@@ -32,6 +33,9 @@
 
 (defn upload-vote [bean-id]
   (ws/send-transit-msg! (make-vote-obj @board-id bean-id)))
+
+(defn init-board [id]
+  (ws/send-transit-msg! [id :init-board]))
 
 (defn refresh-board []
   (ws/send-transit-msg! [@board-id :no-op]))
@@ -84,20 +88,19 @@
         "" :welcome}])
 
 (defn set-page! [match]
-  (reset! current-route match)
-  (if-let [id (get-in match [:route-params :board-id])]
-    (reset! board-id (js/parseInt id))
-    (reset! board-id nil)))
+  ;;(.log js/console (clj->js match))
+  (reset! current-route match))
 
 (def history
   (pushy/pushy set-page! (partial bidi/match-route app-routes)))
 
-(defn enter-board! [board-id]
-  (print (str "/board/" @board-id))
-  (pushy/set-token! history (str "/board/" @board-id))
-  (refresh-board))
+(defn enter-board! [value]
+  ;;(.log js/console (str "/board/" @value))
+  (pushy/set-token! history (str "/board/" @value))
+  (reset! board-id (js/parseInt @value))
+  (init-board (js/parseInt @value)))
 
-(def my-bean (partial ui/bean active-bean-id bean-or-section bean-click))
+(def my-bean (partial ui/bean-note active-bean-id bean-or-section bean-click))
 (def my-section (partial ui/section bean-map my-bean))
 
 (r/defc game []
@@ -108,11 +111,23 @@
 (r/defc app < r/reactive []
   (let [handler (:handler (r/react current-route))]
     (if (= handler :board)
-      (game)
+      (if (nil? (r/react board-id))
+        [:div "no game by that id"]
+        (game))
       (ui/welcome enter-board!))))
 
 (pushy/start! history)
 
 (let [current-url (.-host js/window.location)]
-  (ws/make-websocket! (str "ws://" current-url "/ws") respond-to-ws!))
+  (ws/make-websocket! (str "ws://" current-url "/ws") respond-to-ws!
+                      #(when-not (nil? @board-id) (refresh-board))))
+
+
+(if-let [elem (.getElementById js/document "data" )]
+  (let [reader (cognitect.transit/reader :json)
+        data (cognitect.transit/read reader (.-innerText elem))]
+    (reset! board-id (:id data))
+    (respond-to-ws! data))
+  nil)
+
 (r/mount (app) (.getElementById js/document "app"))

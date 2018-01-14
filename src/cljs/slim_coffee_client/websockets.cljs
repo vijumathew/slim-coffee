@@ -13,8 +13,6 @@
 
 (defn send-transit-msg!
   [msg]
-  (print msg)
-  (print @ws-chan)
   (if @ws-chan
     (.send @ws-chan (t/write json-writer msg))
     (throw (js/Error. "Websocket is not available!"))))
@@ -24,6 +22,7 @@
   (if-let [chan (js/WebSocket. url)]
     (do
       (set! (.-onmessage chan) (receive-transit-msg! receive-handler))
+      (set! (.-onopen chan) on-connect)
       (reset! ws-chan chan)
       (println "Websocket connection established with: " url))
     (throw (js/Error. "Websocket connection failed!"))))

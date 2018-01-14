@@ -1,3 +1,4 @@
 {:require  [slim-coffee-client.core]
+ :asset-path "/main.out"
  :init-fns []
  :compiler-options {}}

@@ -19,7 +19,8 @@
                             [hoplon/javelin "3.9.0"]
                             [com.cemerick/piggieback "0.2.1"]
                             [weasel "0.7.0"]
-                            [org.clojure/tools.nrepl "0.2.12"]])
+                            [org.clojure/tools.nrepl "0.2.12"]
+                            [ring "1.6.3"]])
 
 (task-options!
  aot {:namespace   #{'slim-coffee.core}}
@@ -62,3 +63,12 @@
    (target)
    (with-pass-thru _
      (apply (resolve 'slim-coffee.core/dev-main) args))))
+
+(deftask frontend
+  "run frontend"
+  [a args ARG [str] "the arguments"]
+  (comp
+   (watch)
+   (cljs-repl-env)
+   (cljs)
+   (target)))

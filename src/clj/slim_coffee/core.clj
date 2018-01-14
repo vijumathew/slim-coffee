@@ -10,7 +10,9 @@
              [vote-handler! new-bean-handler! move-handler!]]
             [slim-coffee.util :refer
              [transit-to-string parse-transit-string make-unique-id repeat-into-elem]]
-            [clojure.java.io :as io])
+            [clojure.java.io :as io]
+            [slim-coffee.ui :as ui]
+            [rum.core])
   (:gen-class))
 
 (defn init-data! []
@@ -66,22 +68,20 @@
 ;; [:game-id :action-id payload]
 (defmulti respond-to-action!
   (fn [[_ id]] id))
-
 (defmethod respond-to-action! :vote [[game-id _ data]]
   (let [{:keys [bean-id]} data]
     (vote-handler! game-id bean-id game-to-votes)))
-
 (defmethod respond-to-action! :move [[game-id _ data]]
   (let [{:keys [bean-id old-sec-id new-sec-id]} data]
     (move-handler! game-id bean-id old-sec-id new-sec-id game-to-sections)))
-
 (defmethod respond-to-action! :new-bean [[game-id _ data]]
   (let [{:keys [bean-data]} data
         sec-id (first (get-in @game-to-sections [game-id :vec]))
         bean-id (make-unique-id (set (keys (get-in @game-to-beans [:1 :maps]))))]
     (new-bean-handler! game-id bean-id bean-data sec-id game-to-sections game-to-beans)))
-
 (defmethod respond-to-action! :no-op [[_ _ _]]
+  (identity nil))
+(defmethod respond-to-action! :init-board [[_ _ _]]
   (identity nil))
 
 (defn send-data [game-id]
@@ -107,49 +107,86 @@
                                                  channel status)))
     ;; spec: [:game-id :action-type payload]
     (httpkit/on-receive channel (fn [data]
-                                  (let [parsed (parse-transit-string data)]
-                                    (when (not (get @client-to-game channel))
-                                      (let [board-id (first parsed)]
-                                        (remember-channel! board-id channel)
-                                        (when (not (contains? @game-ids board-id))
-                                          (init-game! board-id)
-                                          (swap! game-ids conj board-id))))
-                                    (async/put! app-chan data))))))
+                                  (let [[board-id action t] (parse-transit-string data)]
+                                    (when (and (not (contains? @game-ids board-id))
+                                               (= action :init-board))
+                                      (init-game! board-id)
+                                      (swap! game-ids conj board-id))
+                                    (when (and (not (get @client-to-game channel))
+                                               (contains? @game-ids board-id))
+                                      (remember-channel! board-id channel))
+                                    (when (contains? @game-ids board-id)
+                                      (async/put! app-chan data)))))))
 
-(def page-handler (atom nil))
-(def handler (atom nil))
+(rum.core/defc server-game [game-id]
+  (let [{m-bean :bean section :section} (get-ws-payload game-id)
+        server-bean
+        (partial ui/bean-note (atom nil) (atom nil) identity)
+        server-section
+        (partial ui/section (atom (:maps m-bean)) server-bean)]
+    (if (nil? m-bean)
+      [:div "no game by that id"]
+      [:div.game-container
+       (ui/message-input identity)
+       (ui/sec-container (atom nil) (atom (:maps section)) (atom (:names section)) identity server-section)])))
 
-(defn reset-handler! []
-  (reset! handler
-          (br/make-handler ["/" {"app.html" app
-                                 "ws" websocket-handler
-                                 "index.html" @page-handler
-                                 "main.js" @page-handler
-                                 "style.css" @page-handler
-                                 "main.out" {true @page-handler}
-                                 true not-found}])))
+(def p-handler (ring.middleware.file/wrap-file {} "target/public"))
 
-(defn start-server [port]
-  (httpkit/run-server @handler {:port port}))
+(defn index-app [body data req]
+  {:status  200
+   :headers {"Content-Type" "text/html"}
+   :body    (rum.core/render-static-markup (ui/index-page body data))})
 
-(defn stop-server [mount-server]
-  (when-not (nil? @mount-server)
-    (@mount-server :timeout 100)))
+(def m-routes ["/" [["" :index]
+                    ["index.html" :index] ;;use page index.html
+                    ["board/" {[:id ""] :board}]
+                    ["ws" :ws]
+                    ["main.js" :page]
+                    ["style.css" :page]
+                    ["main.out" [[true :page]]]
+                    [true :not-found]]])
 
-(mount/defstate server
-  :start (reset! s-atom (start-server 8080))
-  :stop (stop-server s-atom))
+(defmulti route-handler-internal
+  (fn [match _] (:handler match)))
+(defmethod route-handler-internal :index [_ request]
+  (index-app (rum.core/render-html (ui/welcome identity)) nil request))
+(defmethod route-handler-internal :page [_ request] (p-handler request))
+(defmethod route-handler-internal :board [match request]
+  (let [game-id-str (get-in match [:route-params :id])
+        board-id (try (Integer/parseInt game-id-str)
+                      (catch Exception e nil))
+        payload
+        (transit-to-string (assoc (get-ws-payload board-id) :id board-id))]
+    (index-app (rum.core/render-html
+                (server-game board-id))
+               (if-not (nil? (:bean (get-ws-payload board-id)))
+                 payload
+                 nil)
+               request)))
+(defmethod route-handler-internal :ws [match request] (websocket-handler request))
+(defmethod route-handler-internal :not-found [_ request] (not-found request))
+;; use hierarchy to wrap with wrap-file middlewarea
+
+(defn route-handler [request]
+  (let [path (:uri request)
+        data (bidi.bidi/match-route m-routes path)]
+    (route-handler-internal data request)))
+
+(mount.core/defstate server
+  :start (org.httpkit.server/run-server #'route-handler {:port 8081})
+  :stop (when-not (nil? server) (server :timeout 100)))
 
 (defn dev-main []
-  (.mkdirs (io/file "target" "public"))
+  ;;(.mkdirs (io/file "target" "public"))
   (init-data!)
   ;; do something with main.out here as well
-  (reset! page-handler (wrap-file {} "target/public"))
-  (reset-handler!)
+  ;;(reset! page-handler (wrap-file {} "target/public"))
+  ;;(reset-handler!)
   (mount/start))
 
 (defn -main [& args]
   (init-data!)
+  ;; TODO update this
   (reset! page-handler (wrap-resource {} "public"))
   (reset-handler!)
   (mount/start))

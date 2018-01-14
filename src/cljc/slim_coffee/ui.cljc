@@ -1,4 +1,4 @@
-(ns slim-coffee-client.ui
+(ns slim-coffee.ui
   (:require [rum.core :as r]
             [javelin.core :as j]))
 
@@ -8,7 +8,7 @@
 (defn make-false [my-atom]
   (reset! my-atom false))
 
-(r/defcs bean < (r/local false ::hover) r/reactive
+(r/defcs bean-note < (r/local false ::hover) r/reactive
   [state active-bean-id bean-or-section on-click data id]
   (let [active (= (r/react active-bean-id) id)
         is-bean (= (r/react bean-or-section) :bean)
@@ -55,8 +55,7 @@
   (let [value (::value state)]
     [:div.input-container
      [:input
-      {:type :text
-       :auto-focus true
+      {:type #?(:clj "text" :cljs :text)
        :placeholder "new bean"
        :on-change #(reset! value (.. % -target -value)) }]
      [:button
@@ -70,5 +69,19 @@
      [:div.input-container
       [:input {:placeholder "enter game id"
                :on-change #(reset! value (.. % -target -value)) }]
-      [:button {:on-click #(when (-> @value js/isNaN not)
+      [:button {:on-click #(when-not (= @value "") ;;(-> @value js/isNaN not)
                              (on-click value))} "SUBMIT"]]]))
+
+(rum.core/defc index-page [inner-html data]
+  [:html
+   [:head
+    [:title "Slim Coffee!"]
+    [:link {:href "/style.css", :type "text/css", :rel "stylesheet"}]
+    [:meta {:content "width=device-width", :name "viewport"}]]
+   [:body
+    [:div#app (when-not (empty? inner-html)
+                {:dangerouslySetInnerHTML {:__html inner-html}})]
+    (when-not (nil? data)
+      [:div#data {:style {:display "none"}}
+       data])
+    [:script {:src "/main.js"}]]])
