@@ -29,3 +29,17 @@
     (if (> n 0)
       (recur (conj s (f s)) (dec n))
       s)))
+
+(defn vec-remove-index
+  "remove elem in coll"
+  [coll pos]
+  (vec (concat (subvec coll 0 pos) (subvec coll (inc pos)))))
+
+(defn contains-value? [coll element]
+  (boolean (some #(= element %) coll)))
+
+(defn vec-remove
+  [coll elem]
+  (if (contains-value? coll elem)
+    (vec-remove-index coll (.indexOf coll elem))
+    coll))

@@ -85,3 +85,16 @@
       [:div#data {:style {:display "none"}}
        data])
     [:script {:src "/main.js"}]]])
+
+;; data is (get-ws-payload game-id)
+(rum.core/defc server-game [data]
+  (let [{m-bean :bean m-section :section} data
+        server-bean
+        (partial bean-note (atom nil) (atom nil) identity)
+        server-section
+        (partial section (atom (:maps m-bean)) server-bean)]
+    (if (nil? m-bean)
+      [:div "no game by that id"]
+      [:div.game-container
+       (message-input identity)
+       (sec-container (atom nil) (atom (:maps m-section)) (atom (:names m-section)) identity server-section)])))
