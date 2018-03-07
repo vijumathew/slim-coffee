@@ -1,23 +1,13 @@
 (ns slim-coffee.core
   (:require [mount.core :as mount]
-            [bidi.bidi :as bidi]
-            [bidi.ring :as br]
-            [ring.middleware.file :refer [wrap-file]]
-            [ring.middleware.resource :refer [wrap-resource]]
             [clojure.core.async :as async]
             [org.httpkit.server :as httpkit]
-            [slim-coffee.handlers :as handlers]
             [slim-coffee.util :refer
-             [transit-to-string parse-transit-string make-unique-id repeat-into-elem]]
+             [transit-to-string parse-transit-string]]
             [clojure.java.io :as io]
-            [slim-coffee.ui :as ui]
-            [rum.core]
             [slim-coffee.data :as data]
-            [slim-coffee.routes :as routes]
-            )
+            [slim-coffee.routes :as routes])
   (:gen-class))
-
-
 
 (defn notify-clients [msg clients]
   (doseq [channel clients]
@@ -57,16 +47,9 @@
   :stop (when-not (nil? server) (server :timeout 100)))
 
 (defn dev-main []
-  ;;(.mkdirs (io/file "target" "public"))
-  ;; do something with main.out here as well
-  ;;(reset! page-handler (wrap-file {} "target/public"))
-  ;;(reset-handler!)
   (mount/start #'slim-coffee.data/data)
   (mount/start #'slim-coffee.core/server))
 
 (defn -main [& args]
-  (init-data!)
-  ;; TODO update this
-  (reset! page-handler (wrap-resource {} "public"))
-  (reset-handler!)
-  (mount/start))
+  (mount/start #'slim-coffee.data/data)
+  (mount/start #'slim-coffee.core/server))

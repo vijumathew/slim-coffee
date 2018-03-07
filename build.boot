@@ -72,3 +72,7 @@
    (cljs-repl-env)
    (cljs)
    (target)))
+
+;; jack in clojurescript
+;; boot frontent
+;; start repl

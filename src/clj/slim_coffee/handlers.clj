@@ -13,6 +13,17 @@
    :headers {"Content-Type" "text/html"}
    :body    "page not found!"})
 
+(defn remove-from-path [handler substr]
+  (fn [request]
+    (reset! temp request)
+    (let [uri (:uri request)
+          new-uri (if (clojure.string/starts-with? uri substr)
+                (clojure.string/replace-first uri substr "")
+                uri)
+          req (assoc request :uri new-uri)
+          response (handler req)]
+      response)))
+
 (def p-handler (ring.middleware.file/wrap-file {} "target/public"))
 
 (defn index-app [body data req]

@@ -17,7 +17,7 @@
     (.send @ws-chan (t/write json-writer msg))
     (throw (js/Error. "Websocket is not available!"))))
 
-(defn make-websocket! [url receive-handler]
+(defn make-websocket! [url receive-handler on-connect]
   (println "attempting to connect websocket")
   (if-let [chan (js/WebSocket. url)]
     (do

@@ -83,7 +83,7 @@
 
 (defn new-bean-handler! [game-id bean-data]
   (let [sec-id (first (get-in @game-to-sections [game-id :vec]))
-        bean-id (make-unique-id (set (keys (get-in @game-to-beans [:1 :maps]))))
+        bean-id (util/make-unique-id (set (keys (get-in @game-to-beans [:1 :maps]))))
         game-section-data (get @game-to-sections game-id)
         section-data (:maps game-section-data)
         game-bean-data (get @game-to-beans game-id)

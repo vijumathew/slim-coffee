@@ -1,5 +1,6 @@
 (ns slim-coffee.ui
   (:require [rum.core :as r]
+            [rum.util]
             [javelin.core :as j]))
 
 (defn make-true [my-atom]

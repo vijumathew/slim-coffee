@@ -8,7 +8,8 @@
 
 (def m-routes ["/" [["" :index]
                     ["index.html" :index] ;;use page index.html
-                    ["board/" {[:id ""] :board}]
+                    ["board/" {"main.out" [[true :page-board]]
+                               [:id ""] :board}]
                     ["ws" :ws]
                     ["main.js" :page]
                     ["style.css" :page]
@@ -20,6 +21,8 @@
 (defmethod route-handler-internal :index [_ request]
   (handlers/index-app (rum.core/render-html (ui/welcome identity)) nil request))
 (defmethod route-handler-internal :page [_ request] (handlers/p-handler request))
+(defmethod route-handler-internal :page-board [_ request]
+  (handlers/p-handler ((handlers/remove-from-path identity "/board") request)))
 (defmethod route-handler-internal :board [match request]
   ;; get this from data dependency
   (let [game-id-str (get-in match [:route-params :id])
@@ -37,4 +40,5 @@
 (defn route-handler [request]
   (let [path (:uri request)
         data (bidi.bidi/match-route m-routes path)]
+    (reset! temp request)
     (route-handler-internal data request)))
